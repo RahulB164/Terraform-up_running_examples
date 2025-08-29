@@ -1,20 +1,28 @@
 terraform {
-  required_version = ">= 0.8, < 0.9"
+  required_version = ">= 1.0.0, < 2.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
 }
 
 module "webserver_cluster" {
   source = "../../../../modules/services/webserver-cluster"
 
-  ami         = "ami-40d28157"
-  server_text = "New server text"
+  ami         = "ami-0fb653ca2d3203ac1"
 
-  cluster_name           = "webservers-stage"
-  db_remote_state_bucket = "${var.db_remote_state_bucket}"
-  db_remote_state_key    = "${var.db_remote_state_key}"
+  server_text = var.server_text
+
+  cluster_name           = var.cluster_name
+  db_remote_state_bucket = var.db_remote_state_bucket
+  db_remote_state_key    = var.db_remote_state_key
 
   instance_type      = "t2.micro"
   min_size           = 2
@@ -24,7 +32,7 @@ module "webserver_cluster" {
 
 resource "aws_security_group_rule" "allow_testing_inbound" {
   type              = "ingress"
-  security_group_id = "${module.webserver_cluster.elb_security_group_id}"
+  security_group_id = module.webserver_cluster.alb_security_group_id
 
   from_port   = 12345
   to_port     = 12345
